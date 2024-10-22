@@ -1,7 +1,6 @@
-// src/pages/projects/NewProject.tsx
 import { Dialog, Transition } from "@headlessui/react";
 import axios from "axios";
-import React, { Fragment, useReducer, useState } from "react";
+import React, { Fragment, useReducer, useState, useEffect } from "react";
 
 const initialState = {
   name: "",
@@ -10,48 +9,88 @@ const initialState = {
   profession: "",
   age: "",
   address: "",
-
-  // Add more fields as needed
 };
 
 const reducer = (state, action) => {
   switch (action.type) {
     case "SET_FIELD":
       return { ...state, [action.field]: action.value };
+    case "RESET":
+      return initialState;
     default:
       return state;
   }
 };
 
-const NewProject = () => {
+const NewVolunteer = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const [volunteers, setVolunteers] = useState([]);
 
-  // Next, I'll add a new state to handle errors.
+  useEffect(() => {
+    fetchVolunteers();
+  }, []);
+
+  const fetchVolunteers = async () => {
+    try {
+      const response = await axios.get("http://localhost:3002/api/volunteers");
+      setVolunteers(response.data);
+    } catch (err) {
+      console.error("Error fetching volunteers:", err);
+    }
+  };
 
   const closeModal = () => {
     setIsOpen(false);
+    setError("");
+    dispatch({ type: "RESET" });
   };
+
   const openModal = () => {
     setIsOpen(true);
   };
-  const [state, dispatch] = useReducer(reducer, initialState);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     dispatch({ type: "SET_FIELD", field: name, value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    axios
-      .post("http://localhost:3001/addVolunteer", state)
-      .then((res) => {
-        console.log(res);
-        dispatch({ type: "RESET" });
-      })
-      .catch((err) => console.error(err));
-    console.log("Form submitted:", state);
-    window.location.reload();
+    setError("");
+
+    if (!state.name || !state.email || !state.phone) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+
+    try {
+      console.log("Sending volunteer data:", state);
+      const response = await axios.post("http://localhost:3002/api/volunteers", state, {
+        timeout: 10000,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log("Volunteer added:", response.data);
+      closeModal();
+      fetchVolunteers(); // Refresh the list of volunteers
+    } catch (err) {
+      console.error("Error adding volunteer:", err);
+      if (err.response) {
+        console.error("Response data:", err.response.data);
+        console.error("Response status:", err.response.status);
+        console.error("Response headers:", err.response.headers);
+        setError(`Failed to add volunteer. Server responded with: ${err.response.data.error || err.response.statusText}`);
+      } else if (err.request) {
+        console.error("No response received:", err.request);
+        setError("Failed to add volunteer. No response received from the server. Please try again.");
+      } else {
+        console.error("Error details:", err.message);
+        setError(`Failed to add volunteer. ${err.message}`);
+      }
+    }
   };
 
   return (
@@ -59,9 +98,9 @@ const NewProject = () => {
       <button
         type="button"
         onClick={openModal}
-        className="rounded-md bg-blue-500 ml-20 mt-4  px-4 py-2 text-sm font-medium text-white hover:bg-opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
+        className="rounded-md bg-blue-500 ml-20 mt-4 px-4 py-2 text-sm font-medium text-white hover:bg-opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
       >
-        Register
+        Register as Volunteer
       </button>
       <Transition appear show={isOpen} as={Fragment}>
         <Dialog as="div" className="relative z-10" onClose={closeModal}>
@@ -96,79 +135,68 @@ const NewProject = () => {
                   </Dialog.Title>
                   <div className="mt-2">
                     <form onSubmit={handleSubmit}>
-                      {/* I'll show the error, if it exists.*/}
-
+                      {error && (
+                        <p className="text-red-500 text-sm mb-4">{error}</p>
+                      )}
                       <input
                         type="text"
                         name="name"
                         placeholder="Enter your Name..."
                         value={state.name}
                         onChange={handleChange}
-                        autoFocus
-                        className="w-full border rounded-md py-2 px-3 my-4 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:shadow-outline-blue "
+                        required
+                        className="w-full border rounded-md py-2 px-3 my-4 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:shadow-outline-blue"
                       />
                       <input
                         type="email"
-                        id="email"
                         name="email"
                         value={state.email}
                         onChange={handleChange}
                         placeholder="JohnDoe@example.com"
-                        autoFocus
-                        className="w-full border rounded-md py-2 px-3 my-4 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:shadow-outline-blue "
+                        required
+                        className="w-full border rounded-md py-2 px-3 my-4 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:shadow-outline-blue"
                       />
                       <input
                         type="tel"
-                        id="phone"
                         name="phone"
                         value={state.phone}
                         onChange={handleChange}
-                        placeholder="+91XXXXXXXXXX."
-                        autoFocus
-                        className="w-full border rounded-md py-2 px-3 my-4 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:shadow-outline-blue "
+                        placeholder="+91XXXXXXXXXX"
+                        required
+                        className="w-full border rounded-md py-2 px-3 my-4 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:shadow-outline-blue"
                       />
                       <input
                         type="number"
-                        id="age"
                         name="age"
                         min="18"
                         value={state.age}
                         onChange={handleChange}
                         placeholder="Enter age..."
-                        autoFocus
-                        className="w-full border rounded-md py-2 px-3 my-4 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:shadow-outline-blue "
+                        className="w-full border rounded-md py-2 px-3 my-4 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:shadow-outline-blue"
                       />
                       <input
-                        id="address"
                         name="address"
                         value={state.address}
                         onChange={handleChange}
                         placeholder="Enter Your City..."
-                        autoFocus
-                        className="w-full border rounded-md py-2 px-3 my-4 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:shadow-outline-blue "
-                        rows="4"
-                        cols="10"
+                        className="w-full border rounded-md py-2 px-3 my-4 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:shadow-outline-blue"
                       />
                       <input
                         type="text"
-                        id="profession"
                         name="profession"
                         value={state.profession}
                         onChange={handleChange}
                         placeholder="Enter Profession..."
-                        autoFocus
-                        className="w-full border rounded-md py-2 px-3 my-4 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:shadow-outline-blue "
+                        className="w-full border rounded-md py-2 px-3 my-4 text-gray-700 leading-tight focus:outline-none focus:border-blue-500 focus:shadow-outline-blue"
                       />
-
                       <button
-                        id="submitNewProjectBtn"
                         type="submit"
                         className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 mr-2 text-sm font-medium text-white hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                       >
                         Submit
                       </button>
                       <button
-                        type="submit"
+                        type="button"
                         onClick={closeModal}
                         className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                       >
@@ -182,7 +210,25 @@ const NewProject = () => {
           </div>
         </Dialog>
       </Transition>
+
+      {/* Display Volunteers */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold mb-4">Registered Volunteers</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {volunteers.map((volunteer) => (
+            <div key={volunteer._id} className="bg-white shadow-md rounded-lg p-4">
+              <h3 className="text-lg font-semibold">{volunteer.name}</h3>
+              <p>Email: {volunteer.email}</p>
+              <p>Phone: {volunteer.phone}</p>
+              <p>Profession: {volunteer.profession}</p>
+              <p>Age: {volunteer.age}</p>
+              <p>Address: {volunteer.address}</p>
+            </div>
+          ))}
+        </div>
+      </div>
     </>
   );
 };
-export default NewProject;
+
+export default NewVolunteer;

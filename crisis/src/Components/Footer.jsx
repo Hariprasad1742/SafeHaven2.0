@@ -32,13 +32,13 @@ const Footer = () => {
             <p className="text-gray-300">
               Developed By
               <br />
-              Dept of Information Technology,
+             Hari Prasad M
               <br />
-              Chaitanya Bharathi Institute of Technology,
+              Coimbatore Institute of Technology,
               <br />
-              Hyderabad
+              TamilNadu
               <br />
-              India - 200075.
+              cbe-004
               <br />
               Reserved for Government of India.
             </p>
@@ -51,7 +51,7 @@ const Footer = () => {
                 href="mailto:support@pupilfirst.org"
                 className="text-white underline"
               >
-                support@crisisconnect.org
+                support@SafeHaven.org
               </a>
             </p>
             <p className="text-gray-400 mt-2">

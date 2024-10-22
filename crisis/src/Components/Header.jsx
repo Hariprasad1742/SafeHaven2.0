@@ -7,7 +7,7 @@ const Header = () => {
       <div className="flex items-center mx-auto">
         <div className="text-white flex text-6xl font-bold py-5 w-fit">
           <img src={icon} className="h-20 w-20 bg-sky-600"></img>
-          Crisis Connect
+          SafeHaven
         </div>
       </div>
       <div className="flex items-center">

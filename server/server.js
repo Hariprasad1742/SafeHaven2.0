@@ -34,6 +34,16 @@ app.post("/addDisaster", async (req, res) => {
     }
 })
 
+app.get("/getDisasters", async (req, res) => {
+    try {
+        const disasters = await Disaster.find({});
+        res.json(disasters);
+    } catch (error) {
+        console.error('Error fetching disasters:', error);
+        res.status(500).json({ error: 'Failed to fetch disasters' });
+    }
+});
+
 //==========================endpoints related to volunteers==============
 app.post("/api/volunteers", async (req, res) => {
     try {

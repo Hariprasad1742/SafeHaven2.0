@@ -34,7 +34,7 @@ const NewVolunteer = () => {
 
   const fetchVolunteers = async () => {
     try {
-      const response = await axios.get("http://localhost:3002/api/volunteers");
+      const response = await axios.get("http://localhost:3001/api/volunteers");
       setVolunteers(response.data);
     } catch (err) {
       console.error("Error fetching volunteers:", err);
@@ -67,7 +67,7 @@ const NewVolunteer = () => {
 
     try {
       console.log("Sending volunteer data:", state);
-      const response = await axios.post("http://localhost:3002/api/volunteers", state, {
+      const response = await axios.post("http://localhost:3001/api/volunteers", state, {
         timeout: 10000,
         headers: {
           'Content-Type': 'application/json',

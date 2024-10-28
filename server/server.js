@@ -58,6 +58,33 @@ app.get("/getDisaster/:id", async (req, res) => {
     }
 });
 
+// Add endpoint for updating disaster fields
+app.put("/updateFields/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const fieldsToUpdate = req.body;
+
+        const disaster = await Disaster.findById(id);
+        if (!disaster) {
+            return res.status(404).json({ message: "Disaster not found" });
+        }
+
+        // Update only the provided fields
+        Object.keys(fieldsToUpdate).forEach(field => {
+            if (disaster[field] !== undefined) {
+                disaster[field] = fieldsToUpdate[field];
+            }
+        });
+
+        // Save the updated disaster
+        const updatedDisaster = await disaster.save();
+        res.status(200).json(updatedDisaster);
+    } catch (error) {
+        console.error('Error updating disaster fields:', error);
+        res.status(500).json({ error: 'Failed to update disaster fields' });
+    }
+});
+
 // Add endpoint for adding images to a disaster
 app.post("/addImage/:id", async (req, res) => {
     try {

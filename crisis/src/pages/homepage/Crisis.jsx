@@ -5,17 +5,50 @@ import { Link } from "react-router-dom";
 const Crisis = () => {
   const [focus, setFocus] = useState(false);
   const [disasters, setDisasters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchDisasters = () => {
+    setLoading(true);
+    setError(null);
     axios
       .get("http://localhost:3001/getDisasters")
-      .then((res) => setDisasters(res.data))
-      .catch((err) => console.error(err));
+      .then((res) => {
+        setDisasters(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError("Failed to load disasters. Please try again later.");
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
     fetchDisasters();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="w-full bg-cyan-300 p-10 text-center">
+        <h2 className="text-4xl font-bold text-black py-10">Loading disasters...</h2>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full bg-cyan-300 p-10 text-center">
+        <h2 className="text-4xl font-bold text-black py-10">{error}</h2>
+        <button 
+          onClick={fetchDisasters}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-cyan-300 p-10">

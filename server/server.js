@@ -9,7 +9,8 @@ const Comment = require("./models/comment")
 const connectionString = "mongodb://localhost:27017/CrisisConnect";
 const app = express()
 app.use(cors())
-app.use(express.json())
+app.use(express.json({ limit: '50mb' }))  // Increased limit for handling base64 images
+app.use(express.urlencoded({ limit: '50mb', extended: true }))
 
 //================================Connecting to dataBase======
 async function connectToMongoDB() {
@@ -41,6 +42,48 @@ app.get("/getDisasters", async (req, res) => {
     } catch (error) {
         console.error('Error fetching disasters:', error);
         res.status(500).json({ error: 'Failed to fetch disasters' });
+    }
+});
+
+app.get("/getDisaster/:id", async (req, res) => {
+    try {
+        const disaster = await Disaster.findById(req.params.id);
+        if (!disaster) {
+            return res.status(404).json({ message: "Disaster not found" });
+        }
+        res.json(disaster);
+    } catch (error) {
+        console.error('Error fetching disaster:', error);
+        res.status(500).json({ error: 'Failed to fetch disaster' });
+    }
+});
+
+// Add endpoint for adding images to a disaster
+app.post("/addImage/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { img } = req.body;
+
+        const disaster = await Disaster.findById(id);
+        if (!disaster) {
+            return res.status(404).json({ message: "Disaster not found" });
+        }
+
+        // Initialize uploadedPhotos array if it doesn't exist
+        if (!disaster.uploadedPhotos) {
+            disaster.uploadedPhotos = [];
+        }
+
+        // Add the new image to the uploadedPhotos array
+        disaster.uploadedPhotos.push(img);
+
+        // Save the updated disaster document
+        await disaster.save();
+
+        res.status(200).json({ message: "Image added successfully", disaster });
+    } catch (error) {
+        console.error('Error adding image:', error);
+        res.status(500).json({ error: 'Failed to add image' });
     }
 });
 
